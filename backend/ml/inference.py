@@ -1,8 +1,6 @@
 import os
 import time
 import glob
-import torch
-import numpy as np
 from datetime import datetime, timezone
 
 try:
@@ -12,19 +10,9 @@ try:
 except ImportError:
     pass
 
-try:
-    from ml.visual_encoder import VisualEncoder
-    from ml.audio_encoder import AudioEncoder
-    from ml.behavior_encoder import BehaviorEncoder
-    from ml.transformer import MTTSEPModel
-except ImportError:
-    try:
-        from visual_encoder import VisualEncoder
-        from audio_encoder import AudioEncoder
-        from behavior_encoder import BehaviorEncoder
-        from transformer import MTTSEPModel
-    except ImportError:
-        pass
+# ML components will be lazy-loaded inside InferenceEngine
+torch = None
+np = None
 
 class InferenceEngine:
     _instance = None
@@ -39,6 +27,22 @@ class InferenceEngine:
         if self._initialized:
             return
             
+        print("[ML] --- LAZY LOADING ML MODELS ---", flush=True)
+        global torch, np
+        import torch
+        import numpy as np
+        
+        try:
+            from ml.visual_encoder import VisualEncoder
+            from ml.audio_encoder import AudioEncoder
+            from ml.behavior_encoder import BehaviorEncoder
+            from ml.transformer import MTTSEPModel
+        except ImportError:
+            from visual_encoder import VisualEncoder
+            from audio_encoder import AudioEncoder
+            from behavior_encoder import BehaviorEncoder
+            from transformer import MTTSEPModel
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.score_history = {} # session_id -> current EMA score
         self.prob_history = {}  # session_id -> list of tensor probs
