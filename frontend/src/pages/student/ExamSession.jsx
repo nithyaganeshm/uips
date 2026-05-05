@@ -33,6 +33,7 @@ const ExamSession = () => {
     face_count: 0,
     anomalies: []
   });
+  const [initializingMl, setInitializingMl] = useState(true);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -214,6 +215,7 @@ const ExamSession = () => {
         });
         
         if (response.data) {
+          setInitializingMl(false);
           setMlAnalysis({
             audio_risk: response.data.audio_risk || 0,
             visual_risk: response.data.visual_risk || 0,
@@ -390,7 +392,7 @@ const ExamSession = () => {
                  </div>
 
                  <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/40 backdrop-blur-md border border-white/5 rounded text-[9px] font-mono text-[#3b82f6] tracking-widest">
-                    ANGLE: {mlAnalysis.face_detected ? 'ACTIVE' : 'LOST'}
+                    ANGLE: {initializingMl ? 'INITIALIZING...' : (mlAnalysis.face_detected ? 'ACTIVE' : 'LOST')}
                  </div>
              </div>
 
@@ -407,8 +409,8 @@ const ExamSession = () => {
                 <div className="space-y-4">
                    <div className="p-3 bg-[#0f1629] rounded border border-[#1e2d4a] flex justify-between items-center">
                      <span className="text-[10px] font-mono text-[#64748b] tracking-wider uppercase">Face Signature</span>
-                     <span className={`text-[10px] font-bold font-mono ${mlAnalysis.face_detected ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                       {mlAnalysis.face_detected ? `VERIFIED (${mlAnalysis.face_count})` : 'MISSING'}
+                     <span className={`text-[10px] font-bold font-mono ${mlAnalysis.face_detected ? 'text-[#10b981]' : (initializingMl ? 'text-[#3b82f6]' : 'text-[#ef4444]')}`}>
+                       {initializingMl ? 'INITIALIZING AI...' : (mlAnalysis.face_detected ? `VERIFIED (${mlAnalysis.face_count})` : 'MISSING')}
                      </span>
                    </div>
 

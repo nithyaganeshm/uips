@@ -25,6 +25,9 @@ const WaitingRoom = () => {
        setDevices({ cam: hasCam, mic: hasMic });
     }).catch(console.error);
 
+    // Warm up ML models in the background
+    client.get('/api/ml-warmup').catch(() => {});
+
     // Fetch exams and check session status for each
     client.get('/api/exams')
       .then(res => {

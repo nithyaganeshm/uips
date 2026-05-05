@@ -104,6 +104,24 @@ with app.app_context():
     app.register_blueprint(reports_bp)
     app.register_blueprint(auth_bp)
 
+    @app.route("/api/ml-warmup", methods=["GET"])
+    def ml_warmup():
+        """Trigger ML model loading in the background."""
+        from ml.inference import InferenceEngine
+        import threading
+        
+        def warm():
+            try:
+                print("[UIPS] Background ML Warmup started...", flush=True)
+                InferenceEngine()
+                print("[UIPS] Background ML Warmup complete.", flush=True)
+            except Exception as e:
+                print(f"[UIPS] Background ML Warmup failed: {e}", flush=True)
+                
+        thread = threading.Thread(target=warm)
+        thread.start()
+        return jsonify({"status": "warming", "message": "ML initialization started in background"})
+
     # Register socket events late
     print("[UIPS] Registering socket events...", flush=True)
     register_socket_events(socketio)
