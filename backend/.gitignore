@@ -1,0 +1,16 @@
+
+__pycache__/
+*.pyc
+*.pyo
+*.pth
+uips.db
+uploads/
+reports/
+trained_models/
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+venv/
+env/
