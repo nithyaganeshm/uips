@@ -9,6 +9,11 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB max upload
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "connect_timeout": 10
+        }
+    }
 
 
 class DevelopmentConfig(BaseConfig):

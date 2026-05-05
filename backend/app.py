@@ -110,12 +110,15 @@ def health_check():
 # Startup
 # ---------------------------------------------------------------------------
 
+print(f"[UIPS] Initializing application components...")
 with app.app_context():
     # Create required directories
     os.makedirs("reports", exist_ok=True)
 
     # Initialize database and seed data
+    print(f"[UIPS] Connecting to database...")
     init_db(app)
+    print(f"[UIPS] Application ready to handle requests.")
 
 
 
@@ -124,12 +127,9 @@ with app.app_context():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    import eventlet
     port = int(os.environ.get("PORT", 5000))
-    print(f"\n[UIPS] Starting server on http://0.0.0.0:{port}")
+    print(f"[UIPS] Starting local server on http://0.0.0.0:{port}")
     print(f"[UIPS] Environment: {env}")
-    print(f"[UIPS] Debug: {app.config.get('DEBUG', False)}")
-    
     
     socketio.run(
         app,
@@ -138,4 +138,3 @@ if __name__ == "__main__":
         debug=app.config.get("DEBUG", False),
         use_reloader=True,
     )
-
