@@ -161,7 +161,7 @@ class InferenceEngine:
             avg_probs = torch.stack(self.prob_history[session_id]).mean(dim=0)
             risk_class = torch.argmax(avg_probs).item()
             
-            # OVERRIDE: If face is not detected, force HIGH risk class (2)
+            # If face is not detected, we still predict high but allow the delay logic to confirm
             if not result["face_detected"]:
                 risk_class = 2
             
@@ -191,12 +191,8 @@ class InferenceEngine:
             
             state = self.state_transitions[session_id]
             
-            # BYPASS: If face is missing, escalate to high risk immediately
-            if not result["face_detected"]:
-                state["current_risk"] = "high"
-                state["pending_risk"] = None
-                state["pending_since"] = None
-            elif predicted_risk == state["current_risk"]:
+            # Removed immediate escalation to allow 5s confirmation delay
+            if predicted_risk == state["current_risk"]:
                 # Predicted risk matches confirmed state, reset pending
                 state["pending_risk"] = None
                 state["pending_since"] = None
@@ -221,12 +217,14 @@ class InferenceEngine:
             # Visual risk based on head pose and anomalies
             # Visual risk based on head pose and anomalies
             if not result["face_detected"]:
-                result["visual_risk"] = 100.0 # Force maximum visual risk if face is missing
+                # If face is missing, visual risk is high but we use history to dampen it
+                result["visual_risk"] = 100.0
             else:
                 v_feat_np = v_feat.cpu().numpy()[0]
                 # Pitch is index 1, Yaw is 2, Mouth is 5
-                pose_dev = (abs(v_feat_np[1]) + abs(v_feat_np[2])) * 50 # Max 100
-                mouth_dev = v_feat_np[5] * 30
+                # Relaxed multipliers: 40 instead of 50
+                pose_dev = (abs(v_feat_np[1]) + abs(v_feat_np[2])) * 40 
+                mouth_dev = v_feat_np[5] * 20
                 result["visual_risk"] = min(100.0, pose_dev + mouth_dev)
             
             # Audio risk based on anomalies

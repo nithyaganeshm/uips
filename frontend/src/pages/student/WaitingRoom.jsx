@@ -51,7 +51,10 @@ const WaitingRoom = () => {
             setShowAutoSubmitNotice(true);
          }
       })
-      .catch(err => setError(err.response?.data?.error || err.message))
+      .catch(err => {
+         console.error("[WaitingRoom] Fetch error:", err);
+         setError(err.response?.data?.error || err.message || "Failed to connect to security server");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -88,8 +91,28 @@ const WaitingRoom = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner size="lg" className="h-[80vh]" />;
-  if (error) return <div className="text-[#ef4444] text-center mt-10">{error}</div>;
+  if (loading) return (
+    <div className="h-[80vh] flex flex-col items-center justify-center space-y-4">
+      <LoadingSpinner size="lg" />
+      <p className="font-mono text-xs text-[#3b82f6] animate-pulse">ESTABLISHING SECURE CONNECTION...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="max-w-md mx-auto mt-20 p-8 bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-lg text-center">
+      <div className="w-16 h-16 bg-[#ef4444]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span className="text-2xl">⚠️</span>
+      </div>
+      <h2 className="text-[#ef4444] font-bold font-mono tracking-widest mb-2 uppercase">System Error</h2>
+      <p className="text-sm text-[#94a3b8] font-mono mb-6">{error}</p>
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-6 py-2 bg-[#1e2d4a] text-white rounded font-mono text-xs hover:bg-[#2d3d5a] transition-colors"
+      >
+        RETRY CONNECTION
+      </button>
+    </div>
+  );
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 p-6 bg-[#0a0e1a] min-h-[80vh]">
@@ -126,16 +149,21 @@ const WaitingRoom = () => {
 
          <div>
             <label className="text-sm font-medium text-[#64748b] block mb-2">TARGET MODULE / EXAM SELECT</label>
-            <select
-               className="w-full bg-[#0f1629] border border-[#1e2d4a] text-[#f1f5f9] text-sm rounded-md px-4 py-3 outline-none focus:ring-1 focus:ring-[#3b82f6] focus:border-[#3b82f6]"
-               value={selectedExamId}
-               onChange={(e) => setSelectedExamId(e.target.value)}
-            >
-               {exams.length === 0 && <option value="">NO ACTIVE EXAMS</option>}
-               {exams.map(e => (
-                  <option key={e.id} value={e.id}>{e.title}</option>
-               ))}
-            </select>
+            {exams.length === 0 ? (
+               <div className="p-4 bg-[#0f1629] border border-dashed border-[#1e2d4a] rounded-md text-center">
+                  <p className="text-xs text-[#64748b] font-mono">NO ACTIVE ASSESSMENTS SCHEDULED</p>
+               </div>
+            ) : (
+               <select
+                  className="w-full bg-[#0f1629] border border-[#1e2d4a] text-[#f1f5f9] text-sm rounded-md px-4 py-3 outline-none focus:ring-1 focus:ring-[#3b82f6] focus:border-[#3b82f6]"
+                  value={selectedExamId}
+                  onChange={(e) => setSelectedExamId(e.target.value)}
+               >
+                  {exams.map(e => (
+                     <option key={e.id} value={e.id}>{e.title}</option>
+                  ))}
+               </select>
+            )}
          </div>
 
          {/* Already Taken Status */}

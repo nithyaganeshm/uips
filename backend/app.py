@@ -50,10 +50,18 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
+# Allow Vercel production and localhost for development
+allowed_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175").split(",")
+# Add production Vercel domain if not already present
+if "https://uips.vercel.app" not in allowed_origins:
+    allowed_origins.append("https://uips.vercel.app")
+
 CORS(
     app,
-    origins=os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175").split(","),
+    origins=allowed_origins,
     supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 )
 
 from extensions import socketio

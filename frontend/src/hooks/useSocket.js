@@ -12,10 +12,16 @@ export const useSocket = (userId) => {
     const token = localStorage.getItem('uips_token');
     console.log("[Socket] Connecting with token:", token ? "Present" : "Missing");
     
-    socketRef.current = io(API_BASE, {
+    // Ensure API_BASE doesn't have a trailing slash for socket.io
+    const socketUrl = API_BASE.replace(/\/$/, "");
+
+    socketRef.current = io(socketUrl, {
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['websocket', 'polling'], // Prioritize websocket
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
       auth: { userId, token },
       query: { token }
     });

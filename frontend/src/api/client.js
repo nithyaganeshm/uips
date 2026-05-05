@@ -8,7 +8,7 @@ export const setAuthToken = (token) => {
 };
 
 const client = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE.replace(/\/$/, ""),
   headers: {
     'Content-Type': 'application/json'
   }

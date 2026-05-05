@@ -32,7 +32,7 @@ class VisualEncoder:
             options = vision.FaceDetectorOptions(
                 base_options=base_options,
                 running_mode=vision.RunningMode.IMAGE,
-                min_detection_confidence=0.75 # Further increased to 0.75 for maximum precision
+                min_detection_confidence=0.5 # Reduced from 0.75 to improve recall for glasses/lighting
             )
             self.face_detector = vision.FaceDetector.create_from_options(options)
             print(f"[ML] Tasks API Face Detector initialized with {model_path}")
@@ -85,6 +85,7 @@ class VisualEncoder:
             
             count = 0 # Initialize to 0, will be 1 if a valid face is found
             if detection_result.detections:
+                print(f"[ML] Detected {len(detection_result.detections)} raw faces")
                 # Extract geometric features from the first detected face
                 for face in detection_result.detections:
                     keypoints = face.keypoints
@@ -98,16 +99,18 @@ class VisualEncoder:
                         
                         # SANITY CHECK 1: Size (Eyes should be reasonably far apart)
                         eye_dist_x = abs(re.x - le.x)
-                        if eye_dist_x < 0.05: # Face is too small/far
+                        if eye_dist_x < 0.02: # Relaxed from 0.05 to allow smaller faces
+                            print(f"[ML] Face rejected: eye_dist_x too small ({eye_dist_x:.4f})")
                             continue
 
-                        # SANITY CHECK 2: Orientation (Eyes above nose, nose above mouth)
-                        eye_center_y = (le.y + re.y) / 2
-                        if nose.y < eye_center_y or mouth.y < nose.y:
+                        # Relaxed orientation check: Just ensure eyes are above mouth
+                        if mouth.y < min(le.y, re.y):
+                            print(f"[ML] Face rejected: orientation insane (mouth {mouth.y:.4f} above eyes)")
                             continue
                             
                         # If we reach here, we found a "sane" face
                         count = 1 
+                        print(f"[ML] Sane face confirmed at ({nose.x:.2f}, {nose.y:.2f})")
                         
                         # 1. Yaw (Looking Left/Right)
                         eye_center_x = (le.x + re.x) / 2
@@ -136,10 +139,11 @@ class VisualEncoder:
             
             history = self.session_face_histories[session_id]
             history.append(count)
-            if len(history) > 1: # Reduced from 3 to 1
+            if len(history) > 5: # Increased from 1 to 5 for better stability
                 history.pop(0)
             
-            smooth_count = history[0] # Just use the current/only frame
+            # Majority vote for face detection status
+            smooth_count = 1 if sum(history) > len(history) // 2 else 0
             
             result["face_count"] = smooth_count
             if smooth_count == 0:
