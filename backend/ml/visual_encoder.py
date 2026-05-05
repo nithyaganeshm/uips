@@ -114,6 +114,7 @@ class VisualEncoder:
                         
                         # 1. Yaw (Looking Left/Right)
                         eye_center_x = (le.x + re.x) / 2
+                        eye_center_y = (le.y + re.y) / 2
                         eye_dist_x = abs(re.x - le.x) + 1e-6
                         yaw = (nose.x - eye_center_x) / eye_dist_x
                         geometric_features[2] = np.clip(yaw * 2.0, -1.0, 1.0)
