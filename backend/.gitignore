@@ -4,9 +4,9 @@ __pycache__/
 *.pyo
 *.pth
 uips.db
-uploads/
-reports/
-trained_models/
+/uploads/
+/reports/
+/trained_models/
 *.egg-info/
 dist/
 build/
