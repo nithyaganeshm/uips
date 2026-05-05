@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 
 # Fix OpenBLAS memory allocation error on Windows
