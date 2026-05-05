@@ -1,5 +1,5 @@
-import eventlet
-eventlet.monkey_patch()
+from gevent import monkey
+monkey.patch_all()
 
 import os
 
@@ -55,7 +55,7 @@ from extensions import socketio
 socketio.init_app(
     app,
     cors_allowed_origins="*",
-    async_mode="eventlet",
+    async_mode="gevent",
     manage_session=False,
 )
 

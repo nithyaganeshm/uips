@@ -5,7 +5,8 @@ flask-cors
 python-jose[cryptography]
 flask-sqlalchemy
 sqlalchemy
-eventlet
+gevent
+gevent-websocket
 python-dotenv
 gunicorn
 opencv-python-headless
