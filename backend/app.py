@@ -2,15 +2,21 @@ from gevent import monkey
 monkey.patch_all()
 
 import os
+import sys
+
+# Force output to be unbuffered
+print("[UIPS] --- PROCESS START ---", flush=True)
+print(f"[UIPS] Python Version: {sys.version}", flush=True)
+print("[UIPS] Loading core dependencies...", flush=True)
 
 # Fix OpenBLAS memory allocation error on Windows
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 from dotenv import load_dotenv
-
 load_dotenv()
 
+print("[UIPS] Initializing Flask & SocketIO...", flush=True)
 from flask import Flask, jsonify
 from flask_socketio import SocketIO
 from flask_limiter import Limiter
@@ -60,30 +66,6 @@ socketio.init_app(
 )
 
 # ---------------------------------------------------------------------------
-# Register blueprints
-# ---------------------------------------------------------------------------
-
-from blueprints.exams import exams_bp
-from blueprints.session import session_bp
-from blueprints.monitor import monitor_bp
-from blueprints.reports import reports_bp
-from blueprints.auth.routes import auth_bp
-
-app.register_blueprint(exams_bp)
-app.register_blueprint(session_bp)
-app.register_blueprint(monitor_bp)
-app.register_blueprint(reports_bp)
-app.register_blueprint(auth_bp)
-
-
-
-# ---------------------------------------------------------------------------
-# Register socket events
-# ---------------------------------------------------------------------------
-
-register_socket_events(socketio)
-
-# ---------------------------------------------------------------------------
 # Security headers
 # ---------------------------------------------------------------------------
 
@@ -106,19 +88,33 @@ def health_check():
     return jsonify({"status": "healthy", "version": "1.0.0"})
 
 
-# ---------------------------------------------------------------------------
-# Startup
-# ---------------------------------------------------------------------------
-
 print(f"[UIPS] Initializing application components...")
 with app.app_context():
+    # Register blueprints late to avoid import hangs
+    print("[UIPS] Registering blueprints...", flush=True)
+    from blueprints.exams import exams_bp
+    from blueprints.session import session_bp
+    from blueprints.monitor import monitor_bp
+    from blueprints.reports import reports_bp
+    from blueprints.auth.routes import auth_bp
+
+    app.register_blueprint(exams_bp)
+    app.register_blueprint(session_bp)
+    app.register_blueprint(monitor_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(auth_bp)
+
+    # Register socket events late
+    print("[UIPS] Registering socket events...", flush=True)
+    register_socket_events(socketio)
+
     # Create required directories
     os.makedirs("reports", exist_ok=True)
 
     # Initialize database and seed data
-    print(f"[UIPS] Connecting to database...")
+    print(f"[UIPS] Connecting to database...", flush=True)
     init_db(app)
-    print(f"[UIPS] Application ready to handle requests.")
+    print(f"[UIPS] Application ready to handle requests.", flush=True)
 
 
 
